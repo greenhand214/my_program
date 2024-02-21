@@ -17,7 +17,7 @@
 #include <cpu/decode.h>
 #include <cpu/difftest.h>
 #include <locale.h>
-
+#include "/home/liaozhanlong/Documents/ysyx-workbench/nemu/src/monitor/sdb/watchpoint.h"
 /* The assembly code of instructions executed is only output to the screen
  * when the number of instructions executed is less than this value.
  * This is useful when you use the `si' command.
@@ -34,10 +34,30 @@ void device_update();
 
 static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #ifdef CONFIG_ITRACE_COND
-  if (ITRACE_COND) { log_write("%s\n", _this->logbuf); }
+    if (ITRACE_COND) { log_write("%s\n", _this->logbuf); }
 #endif
-  if (g_print_step) { IFDEF(CONFIG_ITRACE, puts(_this->logbuf)); }
-  IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
+    if (g_print_step) { IFDEF(CONFIG_ITRACE, puts(_this->logbuf)); }
+    IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
+    // Scan all watchpoint.
+    for(int i = 0 ; i < NR_WP; i ++){
+        if(wp_pool[i].flag)
+        {
+            bool success = false;
+            int tmp = expr(wp_pool[i].expr,&success);
+            if(success){
+                if(tmp != wp_pool[i].old_value)
+                {
+                    nemu_state.state = NEMU_STOP;
+                    printf("NO EQ\n");
+                    return ;
+                }
+            }
+            else{
+                printf("expr error.\n");
+                assert(0);
+            }
+        }
+    }
 }
 
 static void exec_once(Decode *s, vaddr_t pc) {
@@ -105,6 +125,10 @@ void cpu_exec(uint64_t n) {
       return;
     default: nemu_state.state = NEMU_RUNNING;
   }
+  /*
+  问题：在调用cpu_exec()的时候传入了参数-1，代表什么？
+  cpu_exec()和execute()中可以看到其形参类型为uint_64，为无符号整数，所以-1在execute函数的for循环中代表执行MAX次数！
+  */
 
   uint64_t timer_start = get_time();
 

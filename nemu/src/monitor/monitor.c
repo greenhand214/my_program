@@ -23,7 +23,7 @@ void init_difftest(char *ref_so_file, long img_size, int port);
 void init_device();
 void init_sdb();
 void init_disasm(const char *triple);
-
+/*
 static void welcome() {
   Log("Trace: %s", MUXDEF(CONFIG_TRACE, ANSI_FMT("ON", ANSI_FG_GREEN), ANSI_FMT("OFF", ANSI_FG_RED)));
   IFDEF(CONFIG_TRACE, Log("If trace is enabled, a log file will be generated "
@@ -35,7 +35,7 @@ static void welcome() {
   Log("Exercise: Please remove me in the source code and compile NEMU again.");
   assert(0);
 }
-
+*/
 #ifndef CONFIG_TARGET_AM
 #include <getopt.h>
 
@@ -140,7 +140,7 @@ void init_monitor(int argc, char *argv[]) {
 #endif
 
   /* Display welcome message. */
-  welcome();
+//  welcome();
 }
 #else // CONFIG_TARGET_AM
 static long load_img() {

@@ -14,25 +14,34 @@
 ***************************************************************************************/
 
 #include "sdb.h"
-
+#include "watchpoint.h"
 #define NR_WP 32
-
+/*
 typedef struct watchpoint {
   int NO;
   struct watchpoint *next;
 
-  /* TODO: Add more members if necessary */
+  // TODO: Add more members if necessary 
+  bool flag; 是否被使用
+  char expr[100];
+  int new_value;
+  int old_value;
 
 } WP;
 
 static WP wp_pool[NR_WP] = {};
 static WP *head = NULL, *free_ = NULL;
 
+static
+使其生命周期延长，出函数不会被销毁
+*/
+WP wp_pool[NR_WP] = {};
 void init_wp_pool() {
   int i;
   for (i = 0; i < NR_WP; i ++) {
     wp_pool[i].NO = i;
     wp_pool[i].next = (i == NR_WP - 1 ? NULL : &wp_pool[i + 1]);
+    wp_pool[i].flag = false;
   }
 
   head = NULL;
@@ -40,4 +49,48 @@ void init_wp_pool() {
 }
 
 /* TODO: Implement the functionality of watchpoint */
+WP* new_wp(){
+    for(WP* p = free_ ; p -> next != NULL ; p = p -> next){
+//	printf("P address = %p\n",p);
+    if( p -> flag == false){
+        p -> flag = true;
+      if(head == NULL){    
+      head = p;
+      }else{
+        WP* q = head;
+        while(q -> next -> flag == true)
+        {
+          printf("1.\n");
+          q = q -> next;
+        }
+        q -> next = p;
+      }
+        return p;
+	  }
+    }
+    printf("No unuse point.\n");
+    assert(0);
+    return NULL;
 
+}
+
+
+void free_wp(WP *wp){
+  if(head -> NO == wp -> NO){
+    	head -> flag = false;
+	  head = NULL;
+	  printf("Delete watchpoint  success.\n");
+	  return ;
+    }
+  for(WP* p = head ; p -> next != NULL ; p = p -> next){
+//	printf("wp -> no = %d , head -> no = %d, p -> no = %d.\n", wp -> NO, p-> NO, head -> NO);
+    if(p -> next -> NO  == wp -> NO)
+    {
+        p -> next = p -> next -> next;
+        p -> next -> flag = false; // 没有被使用
+        printf("free succes.\n");
+        return ;
+    }
+  }
+
+}
